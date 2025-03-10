@@ -4,7 +4,7 @@ A tool that bombards your EVM chain with a constant stream of transactions.
 
 ## Overview
 
-Designed specifically for Avalanche L1s. Learn how to launch your own Avalanche
+Designed specifically for Avalanche L1s, but works with any EVM. Learn how to launch your own Avalanche
 L1 at [build.avax.network](https://build.avax.network/).
 
 ### Installation
