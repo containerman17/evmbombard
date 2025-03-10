@@ -160,3 +160,9 @@ curl -X POST --data '{"jsonrpc":"2.0","id":1,"method":"info.getNodeID"}' -H "con
 7. Open the subnet in the
    [EVM Performance Monitor tool](https://builders-hub-git-benchmark-ava-labs.vercel.app/tools/l1-toolbox#performanceMonitor).
    See screenshot above.
+
+---
+
+TODO: replace
+`https://builders-hub-git-benchmark-ava-labs.vercel.app/tools/l1-toolbox` with
+`https://build.avax.network/tools/l1-toolbox`
