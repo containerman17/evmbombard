@@ -161,6 +161,41 @@ curl -X POST --data '{"jsonrpc":"2.0","id":1,"method":"info.getNodeID"}' -H "con
    [EVM Performance Monitor tool](https://builders-hub-git-benchmark-ava-labs.vercel.app/tools/l1-toolbox#performanceMonitor).
    See screenshot above.
 
+## Example output:
+
+```
+Using 5 RPC URLs
+funding 2 accounts
+2025/03/10 05:39:23 New block: 4836, tx count: 2
+all accounts funded
+2025/03/10 05:39:24 New block: 4837, tx count: 1
+2025/03/10 05:39:25 New block: 4838, tx count: 49
+2025/03/10 05:39:26 New block: 4839, tx count: 1250
+2025/03/10 05:39:27 New block: 4840, tx count: 2153
+2025/03/10 05:39:27 New block: 4841, tx count: 300
+2025/03/10 05:39:28 New block: 4842, tx count: 2533
+2025/03/10 05:39:29 New block: 4843, tx count: 3391
+2025/03/10 05:39:30 New block: 4844, tx count: 3782
+2025/03/10 05:39:31 New block: 4845, tx count: 4154
+2025/03/10 05:39:32 New block: 4846, tx count: 3741
+2025/03/10 05:39:33 New block: 4847, tx count: 3791
+2025/03/10 05:39:34 New block: 4848, tx count: 4075
+2025/03/10 05:39:34 New block: 4849, tx count: 555
+2025/03/10 05:39:35 New block: 4850, tx count: 4804
+2025/03/10 05:39:36 New block: 4851, tx count: 4674
+2025/03/10 05:39:37 New block: 4852, tx count: 4533
+2025/03/10 05:39:38 New block: 4853, tx count: 4135
+2025/03/10 05:39:39 New block: 4854, tx count: 4939
+2025/03/10 05:39:40 New block: 4855, tx count: 4606
+Errors: 466, Last error: failed to send transaction: already known
+2025/03/10 05:39:41 New block: 4856, tx count: 5080
+2025/03/10 05:39:43 New block: 4857, tx count: 5118
+2025/03/10 05:39:43 New block: 4858, tx count: 415
+Errors: 100, Last error: failed to send transaction: already known
+2025/03/10 05:39:43 New block: 4859, tx count: 5094
+2025/03/10 05:39:44 New block: 4860, tx count: 3413
+```
+
 ---
 
 TODO: replace
