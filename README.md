@@ -23,16 +23,35 @@ Replace RPC URLs with RPC urls of your Avalanche L1.
 
 ### How it Works
 
-This tool provides a steady stream of transactions to your EVM chain in
-configurable batches. It works by:
+This tool bombards your EVM chain with a steady stream of transactions in
+configurable batches. The process works as follows:
 
-1. Using a well-known address (0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC) as
-   the funding source
-2. Creating multiple transaction sender accounts
-3. Funding these accounts from the root address
-4. Sending transactions in parallel batches
+1. **Key Management**:
+   - Generates a specified number of private keys (configurable via `-keys`
+     flag)
+   - Stores these keys in a local file (`.keys.txt`) for reuse between runs
+   - Reads existing keys from the file when available
 
-The recommended maximum batch size is 79 transactions. Beyond this threshold,
+2. **Account Funding**:
+   - Uses a pre-funded address (0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC) as
+     the source
+   - Checks balances of generated accounts and funds only those that need it
+   - Processes funding in efficient batches to maximize throughput
+   - Waits for funding transactions to be confirmed before proceeding
+
+3. **Transaction Bombardment**:
+   - Each funded account continuously sends transactions to itself
+   - Transactions are sent in parallel batches (configurable via `-batch` flag)
+   - Manages nonces carefully to ensure transaction validity
+   - Monitors for transaction confirmation and handles errors automatically
+   - Spreads load across multiple RPC endpoints when available
+
+4. **Performance Monitoring**:
+   - Tracks transactions that have been mined
+   - Reports errors and automatically retries when necessary
+   - Monitors new blocks and transaction inclusion
+
+The recommended batch size is 79 transactions per batch. Beyond this threshold,
 EVM nodes may start dropping transactions during network replication.
 
 Performance improves significantly when using multiple RPC nodes. The example
