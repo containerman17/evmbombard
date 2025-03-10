@@ -150,11 +150,12 @@ curl -X POST --data '{"jsonrpc":"2.0","id":1,"method":"info.getNodeID"}' -H "con
 ```
 
 6. [Convert the subnet+chain to L1 here](https://builders-hub-git-benchmark-ava-labs.vercel.app/tools/l1-toolbox#convertToL1)
-
-You will need to provide proofs of possession from every node. Keep weights and
-balances the same. You will need 5 Fuji AVAX for that. Get it from the faucet
-(https://test.core.app/tools/testnet-faucet/) and transfer via the
-[cross chain transfer tool](https://test.core.app/stake/cross-chain-transfer/).
+   You will need to provide proofs of possession from every node. Keep weights
+   and balances the same. You will need 5 Fuji AVAX for that. Get it from the
+   faucet
+   [https://test.core.app/tools/testnet-faucet/](https://test.core.app/tools/testnet-faucet/)
+   and transfer via the
+   [cross chain transfer tool](https://test.core.app/stake/cross-chain-transfer/).
 
 7. Open the subnet in the
    [EVM Performance Monitor tool](https://builders-hub-git-benchmark-ava-labs.vercel.app/tools/l1-toolbox#performanceMonitor).
