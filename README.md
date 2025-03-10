@@ -51,7 +51,7 @@ configurable batches. The process works as follows:
    - Reports errors and automatically retries when necessary
    - Monitors new blocks and transaction inclusion
 
-The recommended batch size is 79 transactions per batch. Beyond this threshold,
+The recommended batch size is below 79 transactions per batch. Try 2, 10, 15, 20 and 50. Beyond this threshold,
 EVM nodes may start dropping transactions during network replication.
 
 Performance improves significantly when using multiple RPC nodes. The example
