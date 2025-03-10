@@ -1,40 +1,56 @@
 # evmbombard
 
-Bombards your EVM with a constant stream of transactions
+A tool that bombards your EVM chain with a constant stream of transactions.
 
-made for Avalanche L1s. learn how to lkaunch your own Avalanche L1 here
-https://build.avax.network/
+## Overview
 
-usage from repo if you clone it
+Designed specifically for Avalanche L1s. Learn how to launch your own Avalanche
+L1 at [build.avax.network](https://build.avax.network/).
 
-go run . -rpc
-"http://127.0.0.1:9650/ext/bc/2tZKcT/rpc;http://node2:9650/ext/bc/2tZKcT/rpc"
--batch 50 -keys 600
+### Installation
 
-but better is `go install github.com/containerman17/evmbombard`
+```bash
+go install github.com/containerman17/evmbombard
+```
 
-it uses address 0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC as a root addresss.
-it's a well known private key, therefore hardcoded.
+### Usage
 
-then `evmbombard -rpc "RPC_URL" -batch 50 -keys 600`
+```bash
+evmbombard -rpc "http://127.0.0.1:9650/ext/bc/2tZKcT/rpc;http://node2:9650/ext/bc/2tZKcT/rpc" -batch 50 -keys 600
+```
 
-this tool will provide a steady stream of transactions to your EVM chain in
-batches of transactions.
+Replace RPC URLs with RPC urls of your Avalanche L1.
 
-max batch size isss 79, above that EVM nodes will start loosing transactions
-during replication.
+### How it Works
 
-it works way better with multiple RPC nodes. Here is an example of what you can
-easily achieve with 5 nodes in the same datacenter:
+This tool provides a steady stream of transactions to your EVM chain in
+configurable batches. It works by:
+
+1. Using a well-known address (0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC) as
+   the funding source
+2. Creating multiple transaction sender accounts
+3. Funding these accounts from the root address
+4. Sending transactions in parallel batches
+
+The recommended maximum batch size is 79 transactions. Beyond this threshold,
+EVM nodes may start dropping transactions during network replication.
+
+Performance improves significantly when using multiple RPC nodes. The example
+below demonstrates what can be achieved with 5 nodes in the same datacenter,
+allowing for thousands of transactions per second.
+
+### Results example
 
 ![3543 TPS sustained](docs/result.png)
 
 3543 TPS sustained over 1 minute
 
-below is a guide how to launch your own Avalanche L1 for benchmarking:
+### Launching Avalanche L1 for benchmarking
 
-1. Create 5 nodes on any cloud provider. I did it on AWS, 8 vCPU and 32GB RAM
-   per node, but this is an overkill. Single core performance matters more than
+Below is a guide on how to launch your own Avalanche L1 for benchmarking:
+
+1. Create 5 nodes on any cloud provider. I did it on AWS, 8 vCPU and 64GB RAM
+   per node, but this is overkill. Single core performance matters more than
    number of cores.
 2. [Create a subnet in the toolbox](https://builders-hub-git-benchmark-ava-labs.vercel.app/tools/l1-toolbox#createSubnet)
 3. [Create a chain here](https://builders-hub-git-benchmark-ava-labs.vercel.app/tools/l1-toolbox#createChain)
@@ -80,14 +96,14 @@ Please use the following genesis data:
 }
 ```
 
-4. Launch the validators on each machine. Please not in my example I use tag
+4. Launch the validators on each machine. Please note in my example I use tag
    v0.7.2-fuji, please replace it
    [with the latest stable tag from dockerhub](https://hub.docker.com/r/avaplatform/subnet-evm/tags?name=v)
 
-Repalce REPLACE_THIS_WITH_YOUR_SUBNET_ID_FROM_STEP_1 with the subnet ID from
+Replace REPLACE_THIS_WITH_YOUR_SUBNET_ID_FROM_STEP_1 with the subnet ID from
 step 1.
 
-Please note that this setup exposes your validators port 9650 to the public
+Please note that this setup exposes your validator's port 9650 to the public
 internet, which should be fine for benchmarking, but don't do this in
 production.
 
@@ -108,7 +124,7 @@ docker run -it -d \
     avaplatform/subnet-evm:v0.7.2-fuji
 ```
 
-5. Collect proof of posession from every node using this command:
+5. Collect proof of possession from every node using this command:
 
 ```bash
 curl -X POST --data '{"jsonrpc":"2.0","id":1,"method":"info.getNodeID"}' -H "content-type:application/json;" 127.0.0.1:9650/ext/info
@@ -116,9 +132,11 @@ curl -X POST --data '{"jsonrpc":"2.0","id":1,"method":"info.getNodeID"}' -H "con
 
 6. [Convert the subnet+chain to L1 here](https://builders-hub-git-benchmark-ava-labs.vercel.app/tools/l1-toolbox#convertToL1)
 
-You will need to provide proofs of posession from every node. keep weights and
-balances the same. You will need 5 fuji avax for that. get it from the faucet
+You will need to provide proofs of possession from every node. Keep weights and
+balances the same. You will need 5 Fuji AVAX for that. Get it from the faucet
 (https://test.core.app/tools/testnet-faucet/) and transfer via the
 [cross chain transfer tool](https://test.core.app/stake/cross-chain-transfer/).
 
-7. You are good to go, go get your thousands of TPS!
+7. Open the subnet in the
+   [EVM Performance Monitor tool](https://builders-hub-git-benchmark-ava-labs.vercel.app/tools/l1-toolbox#performanceMonitor).
+   See screenshot above.
