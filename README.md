@@ -97,9 +97,6 @@ Please use the following genesis data:
     },
     "0x0Fa8EA536Be85F32724D57A37758761B86416123": {
       "balance": "0xC097CE7BC90715B34B9F1000000000"
-    },
-    "8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC": {
-      "balance": "0xC097CE7BC90715B34B9F1000000000"
     }
   },
   "nonce": "0x0",
