@@ -71,8 +71,8 @@ Below is a guide on how to launch your own Avalanche L1 for benchmarking:
 1. Create 5 nodes on any cloud provider. I did it on AWS, 8 vCPU and 64GB RAM
    per node, but this is overkill. Single core performance matters more than
    number of cores.
-2. [Create a subnet in the toolbox](https://builders-hub-git-benchmark-ava-labs.vercel.app/tools/l1-toolbox#createSubnet)
-3. [Create a chain here](https://builders-hub-git-benchmark-ava-labs.vercel.app/tools/l1-toolbox#createChain)
+2. [Create a subnet in the toolbox](https://build.avax.network/tools/l1-toolbox#createSubnet)
+3. [Create a chain here](https://build.avax.network/tools/l1-toolbox#createChain)
 
 Please use the following genesis data:
 
@@ -146,7 +146,7 @@ docker run -it -d \
 curl -X POST --data '{"jsonrpc":"2.0","id":1,"method":"info.getNodeID"}' -H "content-type:application/json;" 127.0.0.1:9650/ext/info
 ```
 
-6. [Convert the subnet+chain to L1 here](https://builders-hub-git-benchmark-ava-labs.vercel.app/tools/l1-toolbox#convertToL1)
+6. [Convert the subnet+chain to L1 here](https://build.avax.network/tools/l1-toolbox#convertToL1)
    You will need to provide proofs of possession from every node. Keep weights
    and balances the same. You will need 5 Fuji AVAX for that. Get it from the
    faucet
@@ -155,7 +155,7 @@ curl -X POST --data '{"jsonrpc":"2.0","id":1,"method":"info.getNodeID"}' -H "con
    [cross chain transfer tool](https://test.core.app/stake/cross-chain-transfer/).
 
 7. Open the subnet in the
-   [EVM Performance Monitor tool](https://builders-hub-git-benchmark-ava-labs.vercel.app/tools/l1-toolbox#performanceMonitor).
+   [EVM Performance Monitor tool](https://build.avax.network/tools/l1-toolbox#performanceMonitor).
    See screenshot above.
 
 ## Example output:
@@ -192,9 +192,3 @@ Errors: 100, Last error: failed to send transaction: already known
 2025/03/10 05:39:43 New block: 4859, tx count: 5094
 2025/03/10 05:39:44 New block: 4860, tx count: 3413
 ```
-
----
-
-TODO: replace
-`https://builders-hub-git-benchmark-ava-labs.vercel.app/tools/l1-toolbox` with
-`https://build.avax.network/tools/l1-toolbox`
