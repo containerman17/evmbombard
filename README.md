@@ -16,7 +16,7 @@ go install github.com/containerman17/evmbombard
 ### Usage
 
 ```bash
-evmbombard -rpc "http://127.0.0.1:9650/ext/bc/2tZKcT/rpc;http://node2:9650/ext/bc/2tZKcT/rpc" -batch 50 -keys 600
+evmbombard -rpc "http://127.0.0.1:9650/ext/bc/2tZKcT/rpc,http://node2:9650/ext/bc/2tZKcT/rpc" -batch 50 -keys 600
 ```
 
 Replace RPC URLs with RPC urls of your Avalanche L1.
