@@ -78,7 +78,7 @@ func main() {
 		clients[i] = client
 	}
 
-	txListener := NewTxListener(clients[0])
+	txListener := NewTxListener(clients)
 
 	go txListener.Start(context.Background())
 
@@ -95,7 +95,7 @@ func main() {
 			clientNumber++
 			bombardWithTransactions(clients[clientNumber%len(clients)], key, txListener)
 		}(key)
-		pause := 10000 / keyCount
+		pause := 20000 / keyCount
 		time.Sleep(time.Duration(pause) * time.Millisecond)
 	}
 
