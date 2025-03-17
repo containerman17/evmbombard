@@ -15,7 +15,7 @@ import (
 var batchSize int
 var keyCount int
 
-const timeoutSeconds = 30
+const timeoutSeconds = 10
 
 func main() {
 	// Parse command line arguments
@@ -40,6 +40,15 @@ func main() {
 			"Note: WebSocket endpoints (ws:// or wss://) are preferred for better performance.\n" +
 			"HTTP endpoints will be automatically converted to WebSocket endpoints.")
 	}
+
+	// Filter out empty RPC URLs
+	filteredUrls := make([]string, 0)
+	for _, url := range rpcUrls {
+		if url != "" {
+			filteredUrls = append(filteredUrls, url)
+		}
+	}
+	rpcUrls = filteredUrls
 
 	// Check if there's at least one RPC URL
 	if len(rpcUrls) == 0 {
@@ -86,7 +95,7 @@ func main() {
 			clientNumber++
 			bombardWithTransactions(clients[clientNumber%len(clients)], key, txListener)
 		}(key)
-		pause := 20000 / keyCount
+		pause := 10000 / keyCount
 		time.Sleep(time.Duration(pause) * time.Millisecond)
 	}
 
