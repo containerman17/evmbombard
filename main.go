@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"crypto/ecdsa"
 	"flag"
 	"fmt"
@@ -78,13 +77,9 @@ func main() {
 		clients[i] = client
 	}
 
-	txListener := NewTxListener(clients)
-
-	go txListener.Start(context.Background())
-
 	keys := mustGenPrivateKeys(keyCount)
 
-	err := fund(clients[0], keys, txListener, 50)
+	err := fund(clients[0], keys, 50)
 	if err != nil {
 		log.Fatalf("failed to fund: %v", err)
 	}

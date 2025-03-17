@@ -4,9 +4,8 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"fmt"
-	"log"
 	"math/big"
-	"sync"
+	"time"
 
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -18,7 +17,7 @@ const fundAmount = float64(100000000000000.0)
 // eth address: 0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC
 const hardHatKeyStr = "56289e99c94b6912bfc12adc093c9b51124f0dc54ac7a766b2bc5ccf558d8027"
 
-func fund(client *ethclient.Client, keys []*ecdsa.PrivateKey, listener *TxListener, batchSize int) error {
+func fund(client *ethclient.Client, keys []*ecdsa.PrivateKey, batchSize int) error {
 	// Handle empty keys array
 	if len(keys) == 0 {
 		return nil
@@ -51,7 +50,7 @@ func fund(client *ethclient.Client, keys []*ecdsa.PrivateKey, listener *TxListen
 	// Process full batches
 	for i := 0; i < batchCount; i++ {
 		batchKeys := accountsToFund[i*batchSize : (i+1)*batchSize]
-		err := fundBatch(client, batchKeys, listener)
+		err := fundBatch(client, batchKeys)
 		if err != nil {
 			return err
 		}
@@ -60,7 +59,7 @@ func fund(client *ethclient.Client, keys []*ecdsa.PrivateKey, listener *TxListen
 	// Process remaining keys
 	remainingKeys := accountsToFund[batchCount*batchSize:]
 	if len(remainingKeys) > 0 {
-		err := fundBatch(client, remainingKeys, listener)
+		err := fundBatch(client, remainingKeys)
 		if err != nil {
 			return err
 		}
@@ -70,7 +69,7 @@ func fund(client *ethclient.Client, keys []*ecdsa.PrivateKey, listener *TxListen
 	return nil
 }
 
-func fundBatch(client *ethclient.Client, keys []*ecdsa.PrivateKey, listener *TxListener) error {
+func fundBatch(client *ethclient.Client, keys []*ecdsa.PrivateKey) error {
 	privateKey, err := crypto.HexToECDSA(hardHatKeyStr)
 	if err != nil {
 		return fmt.Errorf("failed to parse private key: %w", err)
@@ -93,7 +92,6 @@ func fundBatch(client *ethclient.Client, keys []*ecdsa.PrivateKey, listener *TxL
 		return fmt.Errorf("failed to get chain ID: %w", err)
 	}
 
-	signedTxs := make([]*types.Transaction, 0, len(keys))
 	for _, key := range keys {
 		to := crypto.PubkeyToAddress(key.PublicKey)
 		var data []byte
@@ -101,52 +99,19 @@ func fundBatch(client *ethclient.Client, keys []*ecdsa.PrivateKey, listener *TxL
 
 		signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), privateKey)
 		if err != nil {
-			log.Fatal(err)
+			return fmt.Errorf("failed to sign transaction: %w", err)
 		}
 
-		signedTxs = append(signedTxs, signedTx)
-
-		nonce++
-	}
-
-	// Send all transactions first
-	var txHashesMutex sync.Mutex
-	txHashes := make([]string, 0, len(signedTxs))
-	var wg sync.WaitGroup
-	errChan := make(chan error, len(signedTxs))
-
-	for _, signedTx := range signedTxs {
-		wg.Add(1)
-		go func(tx *types.Transaction) {
-			defer wg.Done()
-
-			err := client.SendTransaction(context.Background(), tx)
-			if err != nil {
-				errChan <- fmt.Errorf("failed to send transaction: %w", err)
-				return
-			}
-
-			txHashesMutex.Lock()
-			txHashes = append(txHashes, tx.Hash().String())
-			txHashesMutex.Unlock()
-		}(signedTx)
-	}
-
-	wg.Wait()
-	close(errChan)
-
-	// Check if any transactions failed to send
-	for err := range errChan {
+		err = client.SendTransaction(context.Background(), signedTx)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to send transaction: %w", err)
 		}
-	}
 
-	// Wait for all transactions to be mined
-	for _, hash := range txHashes {
-		if err := listener.AwaitTxMined(hash, 10); err != nil {
-			return fmt.Errorf("transaction failed to mine: %w", err)
-		}
+		// Increment nonce for the next transaction
+		nonce++
+
+		// Add a 10ms delay between transactions
+		time.Sleep(5 * time.Millisecond)
 	}
 
 	return nil

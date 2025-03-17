@@ -78,9 +78,9 @@ func bombardWithTransactions(client *ethclient.Client, key *ecdsa.PrivateKey, pa
 				lastError = err.Error()
 			}
 			errorCount++
-			// shouldRefetchNonce = true
-			// time.Sleep(pauseDuration)
-			// continue
+			shouldRefetchNonce = true
+			time.Sleep(pauseDuration)
+			continue
 		}
 
 		nonce++
