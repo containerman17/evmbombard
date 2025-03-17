@@ -28,9 +28,12 @@ func startGasPriceMonitor(client *ethclient.Client) {
 		for {
 			if price, err := client.SuggestGasPrice(context.Background()); err == nil {
 				oldGasPrice := gasPrice
-				gasPrice = price.Mul(price, big.NewInt(1000))
+				// Convert to gwei (1 gwei = 10^9 wei)
+				gasPrice = new(big.Int).Mul(price, big.NewInt(2))
 				if gasPrice.Cmp(oldGasPrice) != 0 {
-					fmt.Println("Gas price changed from", oldGasPrice, "to", gasPrice)
+					oldPriceGwei := new(big.Int).Div(oldGasPrice, big.NewInt(1000000000))
+					newPriceGwei := new(big.Int).Div(gasPrice, big.NewInt(1000000000))
+					fmt.Printf("Gas price changed from %d gwei to %d gwei\n", oldPriceGwei, newPriceGwei)
 				}
 			}
 			time.Sleep(time.Millisecond * 100)
@@ -102,6 +105,8 @@ func bombardWithTransactions(client *ethclient.Client, key *ecdsa.PrivateKey, pa
 				shouldRefetchNonce = true
 			} else if strings.Contains(err.Error(), "transaction underpriced") {
 				//FIXME: should not happen
+			} else if strings.Contains(err.Error(), "already known") {
+				//do nothing, we will retry
 			} else {
 				fmt.Println("This error is not handled: ", err.Error())
 				panic(err)
