@@ -5,6 +5,7 @@ import (
 	"crypto/ecdsa"
 	"fmt"
 	"math/big"
+	"strings"
 	"time"
 
 	"log"
@@ -78,9 +79,15 @@ func bombardWithTransactions(client *ethclient.Client, key *ecdsa.PrivateKey, pa
 				lastError = err.Error()
 			}
 			errorCount++
-			shouldRefetchNonce = true
-			time.Sleep(pauseDuration)
-			continue
+
+			if strings.Contains(err.Error(), "nonce too low") || strings.Contains(err.Error(), "transaction underpriced") {
+				//do nothing, nonce will increase naturally
+			} else if strings.Contains(err.Error(), "future transaction tries to replace pending") {
+				shouldRefetchNonce = true
+			} else {
+				fmt.Println("This error is not handled: ", err.Error())
+				panic(err)
+			}
 		}
 
 		nonce++
