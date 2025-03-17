@@ -13,7 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-const fundAmount = float64(100000.0)
+const fundAmount = float64(100000000000000.0)
 
 // eth address: 0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC
 const hardHatKeyStr = "56289e99c94b6912bfc12adc093c9b51124f0dc54ac7a766b2bc5ccf558d8027"
@@ -86,7 +86,7 @@ func fundBatch(client *ethclient.Client, keys []*ecdsa.PrivateKey, listener *TxL
 	gasLimit := uint64(21000)
 	// Fund with double the amount
 	value := ToWei(fundAmount * 2)
-	gasPrice := big.NewInt(1000000001 * 100)
+	gasPrice := big.NewInt(1000000001 * 1000)
 
 	chainID, err := client.NetworkID(context.Background())
 	if err != nil {

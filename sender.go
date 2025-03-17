@@ -5,7 +5,6 @@ import (
 	"crypto/ecdsa"
 	"fmt"
 	"math/big"
-	"sync"
 	"time"
 
 	"log"
@@ -31,7 +30,7 @@ func init() {
 	}()
 }
 
-func bombardWithTransactions(client *ethclient.Client, key *ecdsa.PrivateKey, listener *TxListener) {
+func bombardWithTransactions(client *ethclient.Client, key *ecdsa.PrivateKey, pauseDuration time.Duration) {
 	fromAddress := crypto.PubkeyToAddress(key.PublicKey)
 
 	gasLimit := uint64(21000)
@@ -42,10 +41,9 @@ func bombardWithTransactions(client *ethclient.Client, key *ecdsa.PrivateKey, li
 	}
 
 	shouldRefetchNonce := true
-
 	nonce := uint64(0)
-
 	to := crypto.PubkeyToAddress(key.PublicKey) // Send to self
+	i := 0
 
 	for {
 		// Re-fetch nonce if previous transactions had errors
@@ -53,81 +51,41 @@ func bombardWithTransactions(client *ethclient.Client, key *ecdsa.PrivateKey, li
 			newNonce, err := client.PendingNonceAt(context.Background(), fromAddress)
 			if err != nil {
 				log.Printf("failed to refresh nonce: %v", err)
-				time.Sleep(1 * time.Second)
+				time.Sleep(100 * time.Millisecond)
 				continue
 			}
 			nonce = newNonce
 			shouldRefetchNonce = false
 		}
 
-		gasPrice := big.NewInt(1000000001 * 10)
+		gasPrice := big.NewInt((1000000001 + int64(i)) * 100)
+		i++
 
-		signedTxs := make([]*types.Transaction, 0, batchSize)
-		for i := 0; i < batchSize; i++ {
-			var data []byte
-			tx := types.NewTransaction(nonce, to, big.NewInt(int64(nonce)), gasLimit, gasPrice, data)
+		// Send single transaction
+		var data []byte
+		tx := types.NewTransaction(nonce, to, big.NewInt(int64(nonce)), gasLimit, gasPrice, data)
 
-			signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), key)
-			if err != nil {
-				log.Fatalf("failed to sign transaction: %v", err)
-			}
-
-			signedTxs = append(signedTxs, signedTx)
-			nonce++
-		}
-
-		var txHashesMutex sync.Mutex
-		txHashes := make([]string, 0, len(signedTxs))
-		var wg sync.WaitGroup
-		errChan := make(chan error, len(signedTxs))
-		hasError := false
-
-		for _, signedTx := range signedTxs {
-			wg.Add(1)
-			go func(tx *types.Transaction) {
-				defer wg.Done()
-
-				err := client.SendTransaction(context.Background(), tx)
-				if err != nil {
-					errChan <- fmt.Errorf("failed to send transaction: %w", err)
-					return
-				}
-
-				txHashesMutex.Lock()
-				txHashes = append(txHashes, tx.Hash().String())
-				txHashesMutex.Unlock()
-			}(signedTx)
-		}
-
-		wg.Wait()
-		close(errChan)
-
-		// Log any transaction send errors
-		for err := range errChan {
-			if err != nil {
-				lastError = err.Error()
-				errorCount++
-				hasError = true
-			}
-		}
-
-		// If we had errors, mark that we should refetch the nonce
-		if hasError {
-			shouldRefetchNonce = true
-			time.Sleep(1 * time.Second)
+		signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), key)
+		if err != nil {
+			log.Printf("failed to sign transaction: %v", err)
+			time.Sleep(pauseDuration)
 			continue
 		}
 
-		// Wait for all transactions to be mined
-		for _, hash := range txHashes {
-			if err := listener.AwaitTxMined(hash, timeoutSeconds); err != nil {
+		err = client.SendTransaction(context.Background(), signedTx)
+		if err != nil {
+			if lastError == "" {
 				lastError = err.Error()
-				errorCount++
-				shouldRefetchNonce = true
-				time.Sleep(1 * time.Second)
 			}
+			errorCount++
+			// shouldRefetchNonce = true
+			// time.Sleep(pauseDuration)
+			// continue
 		}
 
-		// fmt.Printf("Batch of %d transactions sent and mined\n", batchSize)
+		nonce++
+
+		// Wait for the specified pause duration before sending the next transaction
+		time.Sleep(pauseDuration)
 	}
 }

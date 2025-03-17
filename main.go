@@ -12,14 +12,14 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-var batchSize int
+var tps int
 var keyCount int
 
 const timeoutSeconds = 10
 
 func main() {
 	// Parse command line arguments
-	flag.IntVar(&batchSize, "batch", 15, "Size of transaction batches")
+	flag.IntVar(&tps, "tps", 100, "Target transactions per second")
 	flag.IntVar(&keyCount, "keys", 600, "Number of private keys to generate")
 
 	var rpcUrlsArg string
@@ -27,7 +27,7 @@ func main() {
 
 	flag.Parse()
 
-	fmt.Printf("Starting with batch size: %d, key count: %d\n", batchSize, keyCount)
+	fmt.Printf("Starting with target TPS: %d, key count: %d\n", tps, keyCount)
 
 	// Parse RPC URLs from command line
 	var rpcUrls []string
@@ -89,14 +89,24 @@ func main() {
 		log.Fatalf("failed to fund: %v", err)
 	}
 
+	// Calculate pause between transactions based on TPS and key count
+	// For example, if we want 100 TPS across 50 accounts, each account should pause for 500ms
+	pauseMillis := int64(1000 * float64(keyCount) / float64(tps))
+	pauseDuration := time.Duration(pauseMillis) * time.Millisecond
+
+	fmt.Printf("Each account will send a transaction every %v\n", pauseDuration)
+
+	delayBetweenAccounts := 10000 / keyCount
+
 	clientNumber := 0
 	for _, key := range keys {
-		go func(key *ecdsa.PrivateKey) {
-			clientNumber++
-			bombardWithTransactions(clients[clientNumber%len(clients)], key, txListener)
-		}(key)
-		pause := 20000 / keyCount
-		time.Sleep(time.Duration(pause) * time.Millisecond)
+		go func(key *ecdsa.PrivateKey, clientNum int) {
+			bombardWithTransactions(clients[clientNum%len(clients)], key, pauseDuration)
+		}(key, clientNumber)
+		clientNumber++
+
+		// Slight delay between starting goroutines to distribute load
+		time.Sleep(time.Duration(delayBetweenAccounts) * time.Millisecond)
 	}
 
 	// Wait indefinitely
