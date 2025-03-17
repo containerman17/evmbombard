@@ -60,7 +60,7 @@ func bombardWithTransactions(client *ethclient.Client, key *ecdsa.PrivateKey, li
 			shouldRefetchNonce = false
 		}
 
-		gasPrice := big.NewInt(1000000001 * 10)
+		gasPrice := big.NewInt(1000000001 * 1000)
 
 		signedTxs := make([]*types.Transaction, 0, batchSize)
 		for i := 0; i < batchSize; i++ {
