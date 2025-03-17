@@ -18,6 +18,26 @@ import (
 var errorCount = 0
 var lastError string
 
+var gasPrice = big.NewInt(0)
+
+func startGasPriceMonitor(client *ethclient.Client) {
+	gasPrice = big.NewInt(100000000 * 10)
+
+	// Update gas price periodically
+	go func() {
+		for {
+			if price, err := client.SuggestGasPrice(context.Background()); err == nil {
+				oldGasPrice := gasPrice
+				gasPrice = price.Mul(price, big.NewInt(1000))
+				if gasPrice.Cmp(oldGasPrice) != 0 {
+					fmt.Println("Gas price changed from", oldGasPrice, "to", gasPrice)
+				}
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
+	}()
+}
+
 func init() {
 	go func() {
 		for {
@@ -44,7 +64,6 @@ func bombardWithTransactions(client *ethclient.Client, key *ecdsa.PrivateKey, pa
 	shouldRefetchNonce := true
 	nonce := uint64(0)
 	to := crypto.PubkeyToAddress(key.PublicKey) // Send to self
-	i := 0
 
 	for {
 		// Re-fetch nonce if previous transactions had errors
@@ -58,9 +77,6 @@ func bombardWithTransactions(client *ethclient.Client, key *ecdsa.PrivateKey, pa
 			nonce = newNonce
 			shouldRefetchNonce = false
 		}
-
-		gasPrice := big.NewInt((1000000001 + int64(i)) * 100)
-		i++
 
 		// Send single transaction
 		var data []byte
@@ -80,10 +96,12 @@ func bombardWithTransactions(client *ethclient.Client, key *ecdsa.PrivateKey, pa
 			}
 			errorCount++
 
-			if strings.Contains(err.Error(), "nonce too low") || strings.Contains(err.Error(), "transaction underpriced") {
+			if strings.Contains(err.Error(), "nonce too low") || strings.Contains(err.Error(), "replacement transaction underpriced") {
 				//do nothing, nonce will increase naturally
 			} else if strings.Contains(err.Error(), "future transaction tries to replace pending") {
 				shouldRefetchNonce = true
+			} else if strings.Contains(err.Error(), "transaction underpriced") {
+				//FIXME: should not happen
 			} else {
 				fmt.Println("This error is not handled: ", err.Error())
 				panic(err)

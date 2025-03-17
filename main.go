@@ -77,6 +77,8 @@ func main() {
 		clients[i] = client
 	}
 
+	startGasPriceMonitor(clients[0])
+
 	keys := mustGenPrivateKeys(keyCount)
 
 	err := fund(clients[0], keys, 50)
