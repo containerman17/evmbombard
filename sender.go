@@ -5,6 +5,7 @@ import (
 	"crypto/ecdsa"
 	"fmt"
 	"math/big"
+	"strings"
 	"sync"
 	"time"
 
@@ -29,6 +30,21 @@ func init() {
 			time.Sleep(3 * time.Second)
 		}
 	}()
+	go startGasLoop()
+}
+
+var gasPriceGwei = 1
+var hadTransactionUnderpricedErrors = false
+
+func startGasLoop() {
+	for {
+		time.Sleep(1 * time.Second)
+		if hadTransactionUnderpricedErrors {
+			gasPriceGwei++
+			hadTransactionUnderpricedErrors = false
+			fmt.Printf("Increasing gas price to %d\n", gasPriceGwei)
+		}
+	}
 }
 
 func bombardWithTransactions(client *ethclient.Client, key *ecdsa.PrivateKey, listener *TxListener) {
@@ -60,12 +76,10 @@ func bombardWithTransactions(client *ethclient.Client, key *ecdsa.PrivateKey, li
 			shouldRefetchNonce = false
 		}
 
-		gasPrice := big.NewInt(1000000001 * 1000)
-
 		signedTxs := make([]*types.Transaction, 0, batchSize)
 		for i := 0; i < batchSize; i++ {
 			var data []byte
-			tx := types.NewTransaction(nonce, to, big.NewInt(int64(nonce)), gasLimit, gasPrice, data)
+			tx := types.NewTransaction(nonce, to, big.NewInt(int64(nonce)), gasLimit, big.NewInt(int64(gasPriceGwei*1000000000)), data)
 
 			signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), key)
 			if err != nil {
@@ -108,6 +122,9 @@ func bombardWithTransactions(client *ethclient.Client, key *ecdsa.PrivateKey, li
 				lastError = err.Error()
 				errorCount++
 				hasError = true
+				if strings.HasSuffix(err.Error(), ": transaction underpriced") {
+					hadTransactionUnderpricedErrors = true
+				}
 			}
 		}
 
@@ -124,6 +141,9 @@ func bombardWithTransactions(client *ethclient.Client, key *ecdsa.PrivateKey, li
 				lastError = err.Error()
 				errorCount++
 				shouldRefetchNonce = true
+				if strings.HasSuffix(err.Error(), ": transaction underpriced") {
+					hadTransactionUnderpricedErrors = true
+				}
 				time.Sleep(1 * time.Second)
 			}
 		}
