@@ -33,18 +33,36 @@ func init() {
 	go startGasLoop()
 }
 
-var gasPriceGwei = 1
+const GWEI = 1000000000
+
+// const increaseAmount = GWEI * 1
+// const decreaseAmount = GWEI / 100
+
+// const minGasPrice = GWEI * 2
+// const maxGasPrice = GWEI * 50
+
+var gasPrice = int64(GWEI * 100)
+
 var hadTransactionUnderpricedErrors = false
 
 func startGasLoop() {
-	for {
-		time.Sleep(1 * time.Second)
-		if hadTransactionUnderpricedErrors {
-			gasPriceGwei++
-			hadTransactionUnderpricedErrors = false
-			fmt.Printf("Increasing gas price to %d\n", gasPriceGwei)
-		}
-	}
+	//	for {
+	//		time.Sleep(1 * time.Second)
+	//		if hadTransactionUnderpricedErrors {
+	//			gasPrice += increaseAmount
+	//			if gasPrice > maxGasPrice {
+	//				gasPrice = maxGasPrice
+	//			}
+	//			hadTransactionUnderpricedErrors = false
+	//			fmt.Printf("Increasing gas price to %f gwei\n", float64(gasPrice)/float64(GWEI))
+	//		} else {
+	//			gasPrice -= decreaseAmount
+	//			if gasPrice < minGasPrice {
+	//				gasPrice = minGasPrice
+	//			}
+	//			fmt.Printf("Decreasing gas price to %f gwei\n", float64(gasPrice)/float64(GWEI))
+	//		}
+	//	}
 }
 
 func bombardWithTransactions(client *ethclient.Client, key *ecdsa.PrivateKey, listener *TxListener) {
@@ -79,7 +97,7 @@ func bombardWithTransactions(client *ethclient.Client, key *ecdsa.PrivateKey, li
 		signedTxs := make([]*types.Transaction, 0, batchSize)
 		for i := 0; i < batchSize; i++ {
 			var data []byte
-			tx := types.NewTransaction(nonce, to, big.NewInt(int64(nonce)), gasLimit, big.NewInt(int64(gasPriceGwei*1000000000)), data)
+			tx := types.NewTransaction(nonce, to, big.NewInt(int64(nonce)), gasLimit, big.NewInt(gasPrice), data)
 
 			signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), key)
 			if err != nil {
@@ -122,7 +140,7 @@ func bombardWithTransactions(client *ethclient.Client, key *ecdsa.PrivateKey, li
 				lastError = err.Error()
 				errorCount++
 				hasError = true
-				if strings.HasSuffix(err.Error(), ": transaction underpriced") {
+				if isTransactionUnderpriced(err) {
 					hadTransactionUnderpricedErrors = true
 				}
 			}
@@ -141,7 +159,7 @@ func bombardWithTransactions(client *ethclient.Client, key *ecdsa.PrivateKey, li
 				lastError = err.Error()
 				errorCount++
 				shouldRefetchNonce = true
-				if strings.HasSuffix(err.Error(), ": transaction underpriced") {
+				if isTransactionUnderpriced(err) {
 					hadTransactionUnderpricedErrors = true
 				}
 				time.Sleep(1 * time.Second)
@@ -150,4 +168,16 @@ func bombardWithTransactions(client *ethclient.Client, key *ecdsa.PrivateKey, li
 
 		// fmt.Printf("Batch of %d transactions sent and mined\n", batchSize)
 	}
+}
+
+func isTransactionUnderpriced(err error) bool {
+	if strings.HasSuffix(err.Error(), ": transaction underpriced") {
+		return true
+	}
+
+	if strings.Contains(err.Error(), "< pool minimum fee cap") {
+		return true
+	}
+
+	return false
 }
