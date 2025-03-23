@@ -41,7 +41,7 @@ const GWEI = 1000000000
 // const minGasPrice = GWEI * 2
 // const maxGasPrice = GWEI * 50
 
-var gasPrice = int64(GWEI * 100)
+var gasPrice = int64(GWEI * 2)
 
 var hadTransactionUnderpricedErrors = false
 
@@ -97,7 +97,7 @@ func bombardWithTransactions(client *ethclient.Client, key *ecdsa.PrivateKey, li
 		signedTxs := make([]*types.Transaction, 0, batchSize)
 		for i := 0; i < batchSize; i++ {
 			var data []byte
-			tx := types.NewTransaction(nonce, to, big.NewInt(int64(nonce)), gasLimit, big.NewInt(gasPrice), data)
+			tx := types.NewTransaction(nonce, to, big.NewInt(123), gasLimit, big.NewInt(gasPrice), data)
 
 			signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), key)
 			if err != nil {
