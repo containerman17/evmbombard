@@ -41,7 +41,7 @@ const GWEI = 1000000000
 // const minGasPrice = GWEI * 2
 // const maxGasPrice = GWEI * 50
 
-var gasPrice = int64(GWEI * 10)
+var gasPrice = int64(GWEI * 100)
 
 var hadTransactionUnderpricedErrors = false
 
