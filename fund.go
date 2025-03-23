@@ -13,10 +13,18 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-const fundAmount = float64(10000000000000000000000.0)
-
 // eth address: 0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC
 const hardHatKeyStr = "56289e99c94b6912bfc12adc093c9b51124f0dc54ac7a766b2bc5ccf558d8027"
+
+var fundAmount *big.Int
+
+func init() {
+	var ok bool
+	fundAmount, ok = new(big.Int).SetString("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", 0)
+	if !ok {
+		log.Fatal("failed to set fund amount")
+	}
+}
 
 func fund(client *ethclient.Client, keys []*ecdsa.PrivateKey, listener *TxListener, batchSize int) error {
 	// Handle empty keys array
@@ -26,7 +34,7 @@ func fund(client *ethclient.Client, keys []*ecdsa.PrivateKey, listener *TxListen
 
 	// First check which accounts need funding
 	accountsToFund := make([]*ecdsa.PrivateKey, 0)
-	targetBalance := ToWei(fundAmount)
+	targetBalance := fundAmount
 
 	for _, key := range keys {
 		address := crypto.PubkeyToAddress(key.PublicKey)
@@ -85,7 +93,7 @@ func fundBatch(client *ethclient.Client, keys []*ecdsa.PrivateKey, listener *TxL
 
 	gasLimit := uint64(21000)
 	// Fund with double the amount
-	value := ToWei(fundAmount * 2)
+	value := fundAmount
 	gasPrice := big.NewInt(1000000001 * 100)
 
 	chainID, err := client.NetworkID(context.Background())
