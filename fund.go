@@ -20,7 +20,7 @@ var fundAmount *big.Int
 
 func init() {
 	var ok bool
-	fundAmount, ok = new(big.Int).SetString("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", 0)
+	fundAmount, ok = new(big.Int).SetString("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffff", 0)
 	if !ok {
 		log.Fatal("failed to set fund amount")
 	}
@@ -93,8 +93,8 @@ func fundBatch(client *ethclient.Client, keys []*ecdsa.PrivateKey, listener *TxL
 
 	gasLimit := uint64(21000)
 	// Fund with double the amount
-	value := fundAmount
-	gasPrice := big.NewInt(1000000001 * 100)
+	value := new(big.Int).Mul(fundAmount, big.NewInt(2))
+	gasPrice := big.NewInt(GWEI * 1)
 
 	chainID, err := client.NetworkID(context.Background())
 	if err != nil {
